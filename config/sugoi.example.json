@@ -9,7 +9,7 @@
     "SessionCookieMaxAge": 3600,
     "SessionCookieKey": "CHANGEMEZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ==",
     "DirVars": {
-        "DOLPHIN": "/path/to/dolphin/"
+        "MYREPO": "/path/to/myrepo"
     },
     "Users": {
         "user": "$2a$14$HhkeZP5kcCecR9xJGMa6T.5a5mAdYcSwg4ab2aMe63hgUpZiAFBkK"
