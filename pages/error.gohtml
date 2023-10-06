@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    {{template "e_head.gohtml" .}}
+</head>
+
+<body>
+    {{template "e_header.gohtml" .}}
+    <div class="container">
+        <div class="alert alert-danger" role="alert">
+            {{.Error}}
+        </div>
+    </div>
+    {{template "e_footer.gohtml" .}}
+</body>
+
+</html>

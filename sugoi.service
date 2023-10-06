@@ -1,0 +1,14 @@
+[Unit]
+Description=sugoi
+
+[Service]
+User=sugoi
+Group=sugoi
+Type=simple
+Restart=always
+RestartSec=5s
+ExecStart=/home/sugoi/sugoi
+WorkingDirectory=/home/sugoi
+
+[Install]
+WantedBy=multi-user.target

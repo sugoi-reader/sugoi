@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	{{template "e_head.gohtml" .}}
+</head>
+
+<body>
+	{{template "e_header.gohtml" .}}
+	<div class="container">
+		<div class="card">
+			<div class="card-header">
+				System operations
+			</div>
+			<div class="card-body">
+				<form method="post">
+					{{ if .Reindex.Running }}
+						<button type="submit" name="action" value="cancelReindex" class="btn btn-danger">Cancel Reindex</button>
+						<a href="/system?action=reindexStatus" target="_blank" class="btn btn-info">Status</a>
+					{{ else }}
+						<button type="submit" name="action" value="reindex" class="btn btn-primary">Reindex database</button>
+					{{ end }}
+					<button type="submit" name="action" value="reload" class="btn btn-primary">Reload database</button>
+				</form>
+			</div>
+		</div>
+	</div>
+	{{template "e_footer.gohtml" .}}
+	<script>
+		$(document).ready(function() {
+		});
+	</script>
+</body>
+
+</html>

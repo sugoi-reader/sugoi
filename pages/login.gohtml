@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    {{template "e_head.gohtml" .}}
+</head>
+
+<body>
+    {{template "e_header.gohtml" .}}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-md-6 offset-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="loginForm" method="POST">
+                            {{if .Error}}
+                            <div class="alert alert-danger" role="alert">
+                                {{.Error}}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            {{end}}
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" name="user" value="{{trd "user"}}" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" name="password" class="form-control">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{template "e_footer.gohtml" .}}
+    <script>
+        $('#logoutForm').hide();
+    </script>
+</body>
+
+</html>

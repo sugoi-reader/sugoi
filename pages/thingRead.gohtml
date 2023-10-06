@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	{{template "e_head.gohtml" .}}
+</head>
+
+<body class="thingRead">
+	{{template "e_header.gohtml" .}}
+	<div class="container">
+		<div class="btn-toolbar justify-content-center">
+			<div class="btn-group mx-1 mb-4">
+				<a class="btn btn-sm btn-primary" href="{{.Thing.DetailsUrl}}" title="Back to details">
+					<i class="fas fa-arrow-left"></i>
+				</a>
+			</div>
+			<div class="btn-group mx-1 mb-4">
+				<a id="navFirst" class="btn btn-sm btn-primary" title="First">
+					<i class="fas fa-angle-double-left"></i>
+				</a>
+				<a id="navPrev" class="btn btn-sm btn-primary" title="Previous">
+					<i class="fas fa-angle-left"></i>
+				</a>
+				<button id="navCurr" class="btn btn-sm btn-primary" title="Current" disabled></button>
+				<a id="navNext" class="btn btn-sm btn-primary" title="Next">
+					<i class="fas fa-angle-right"></i>
+				</a>
+				<a id="navLast" class="btn btn-sm btn-primary" title="Last">
+					<i class="fas fa-angle-double-right"></i>
+				</a>
+			</div>
+			<div class="btn-group mx-1 mb-4">
+				<button id="fullscreen" type="button" class="btn btn-sm btn-primary" title="Fullscreen">
+					<i class="fas fa-expand"></i>
+				</button>
+				<button id="slideshow" type="button" class="btn btn-sm btn-primary dropdown-toggle"
+					data-toggle="dropdown" title="Slideshow">
+					<i class="far fa-clock"></i>
+				</button>
+				<div class="dropdown-menu dropdown-menu-right" id="slideshowButtons">
+					<button data-delay="5" class="dropdown-item" type="button">5 seconds</button>
+					<button data-delay="10" class="dropdown-item" type="button">10 seconds</button>
+					<button data-delay="30" class="dropdown-item" type="button">30 seconds</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="d-flex justify-content-center position-relative" id="target">
+		<div id="fullscreenToaster" class="px-3 mt-3"></div>
+		<div id="fullscreenProgress">
+			<div id="fullscreenProgressBar" class="progress green"></div>
+		</div>
+		<div id="fullscreenPageCounter"></div>
+	</div>
+
+	{{template "e_footer.gohtml" .}}
+	<script>
+		var hash = {{ .Hash }};
+		var pages = {{ .Files }};
+		var prefix = {{ .Thing.ReadUrl }};
+		var backUrl = {{ .Thing.DetailsUrl }};
+		var title = {{ .Thing.Title }};
+		var page = {{ .Page }};
+
+		$(document).ready(function () {
+			var $title = $('title');
+			var $target = $('#target');
+			var $fullscreenToaster = $('#fullscreenToaster');
+			var $fullscreenProgress = $('#fullscreenProgress');
+			var $fullscreenProgressBar = $('#fullscreenProgressBar').css({ width: "0%" });
+			var $fullscreenPageCounter = $('#fullscreenPageCounter');
+			var $targetImg = $('<img>').css({ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }).hide().appendTo($target);
+			var $navPrev = $('#navPrev');
+			var $navNext = $('#navNext');
+			var $navCurr = $('#navCurr');
+			var $navFirst = $('#navFirst');
+			var $navLast = $('#navLast');
+			var $slideshowButtons = $('#slideshowButtons');
+			var $navAll = $('#navPrev,#navNext,#navFirst,#navLast');
+			var $fullscreen = $('#fullscreen');
+
+			setPage(page);
+			function setPage(i) {
+				if (!(i in pages)) {
+					stopSlideshow();
+					return false;
+				}
+				
+				page = i | 0;
+
+				var expectedPrefix = prefix + "/" + page;
+
+				if (location.pathname != expectedPrefix) {
+					if (location.pathname === prefix) {
+						history.replaceState({ page: page }, "", expectedPrefix);
+					} else {
+						history.pushState({ page: page }, "", expectedPrefix);
+					}
+				}
+
+				$targetImg.show();
+				$targetImg.attr('src', pages[page]);
+				var pageText = "Page " + (page + 1) + "/" + pages.length;
+				$fullscreenPageCounter.html((page + 1) + "/" + pages.length);
+				$navCurr.html(pageText)
+				$title.html("sugoi - " + title + " " + pageText);
+
+				var prevPage = page - 1;
+				if (prevPage < 0) {
+					$navPrev.addClass('disabled').attr('href', 'javascript:;').removeData('page')
+				} else {
+					$navPrev.removeClass('disabled').attr('href', prefix + "/" + prevPage).data('page', prevPage)
+				}
+
+				var nextPage = page + 1;
+				if (nextPage >= pages.length) {
+					$navNext.addClass('disabled').attr('href', 'javascript:;').removeData('page')
+				} else {
+					$navNext.removeClass('disabled').attr('href', prefix + "/" + nextPage).data('page', nextPage)
+				}
+
+				var firstPage = 0;
+				if (page <= firstPage) {
+					$navFirst.addClass('disabled').attr('href', 'javascript:;').removeData('page')
+				} else {
+					$navFirst.removeClass('disabled').attr('href', prefix + "/" + firstPage).data('page', firstPage)
+				}
+
+				var lastPage = pages.length - 1;
+				if (page >= lastPage) {
+					$navLast.addClass('disabled').attr('href', 'javascript:;').removeData('page')
+				} else {
+					$navLast.removeClass('disabled').attr('href', prefix + "/" + lastPage).data('page', lastPage)
+				}
+
+				if (nextPage in pages) {
+					preloadImage(pages[nextPage]);
+				}
+
+				if (prevPage in pages) {
+					preloadImage(pages[prevPage]);
+				}
+
+				resetSlideshow();
+				return true;
+			}
+
+			$navAll.click(function (e) {
+				e.preventDefault();
+
+				var nextPage = $(e.currentTarget).data('page');
+
+				setPage(nextPage);
+			});
+
+			window.addEventListener('popstate', function (event) {
+				if ('page' in event.state) {
+					setPage(event.state.page);
+				}
+			});
+
+			var prevKey = null;
+			window.addEventListener('keydown', function (event) {
+				if (event.isComposing) {
+					return;
+				}
+
+				console.log(event.key);
+				switch (event.key) {
+					case "0":
+					case "1":
+					case "2":
+					case "3":
+					case "4":
+					case "5":
+						if (event.key == prevKey) {
+							setThingRating(hash, event.key)
+								.done(function (data) {
+									toaster(data.Message);
+								})
+								.fail(function (data) {
+									toaster(data.responseJSON.Error);
+								});
+						} else {
+							toaster("Press " + event.key + " again to set the rating to " + event.key + " stars");
+						}
+						break;
+
+					case "m":
+						thingAddMark(hash)
+							.done(function (data) {
+								toaster(data.Message);
+							})
+							.fail(function (data) {
+								toaster(data.responseJSON.Error);
+							});
+						break;
+
+					case "n":
+						thingSubMark(hash)
+							.done(function (data) {
+								toaster(data.Message);
+							})
+							.fail(function (data) {
+								toaster(data.responseJSON.Error);
+							});
+						break;
+
+					case "c":
+						if (event.key == prevKey) {
+							setThingCover(hash, pages[page])
+								.done(function (data) {
+									toaster(data.Message);
+								})
+								.fail(function (data) {
+									toaster(data.responseJSON.Error);
+								});
+						} else {
+							toaster("Press " + event.key + " again to set the cover to " + pages[page]);
+						}
+						break;
+
+					case "s":
+						toggleSlideshow(10 * 1000);
+						event.preventDefault();
+						break;
+
+					case "t":
+						toaster("This is a toast!");
+						event.preventDefault();
+						break;
+
+					case "f":
+						goFullScreen();
+						event.preventDefault();
+						break;
+
+					case "Home":
+						setPage(0);
+						event.preventDefault();
+						break;
+
+					case "End":
+						setPage(pages.length - 1);
+						event.preventDefault();
+						break;
+
+					case "ArrowLeft":
+						setPage(page - 1);
+						event.preventDefault();
+						break;
+
+					case "ArrowRight":
+						setPage(page + 1);
+						event.preventDefault();
+						break;
+
+					case " ":
+					case "Escape":
+						stopSlideshow();
+						event.preventDefault();
+						break;
+
+					case "=":
+					case "+":
+						if (slideshowIsOn) {
+							slideshowMs += 1000;
+							slideshowMs = Math.max(1000, slideshowMs);
+							toaster("Slideshow time: " + slideshowMs/1000 + "s", 1000);
+						}
+						resetSlideshow();
+						event.preventDefault();
+						break;
+
+					case "-":
+						if (slideshowIsOn) {
+							slideshowMs -= 1000;
+							slideshowMs = Math.max(1000, slideshowMs);
+							toaster("Slideshow time: " + slideshowMs/1000 + "s", 1000);
+						}
+						resetSlideshow();
+						event.preventDefault();
+						break;
+				}
+
+				prevKey = event.key;
+			});
+
+			$targetImg.click(function (e) {
+				e.preventDefault();
+				var halfWidth = e.currentTarget.width / 2;
+
+				if (e.originalEvent.offsetX > halfWidth) {
+					setPage(page + 1);
+				} else {
+					setPage(page - 1);
+				}
+			});
+
+			$slideshowButtons.on('click', 'button', function (e) {
+				e.preventDefault();
+				var delay = $(e.currentTarget).data('delay') * 1000;
+				startSlideshow(delay);
+			});
+
+			var slideshowIsOn = false;
+			var slideshowInterval = null;
+			var slideshowMs = null;
+			
+			function toggleSlideshow(delayInMs) {
+				if (slideshowIsOn) {
+					stopSlideshow();
+				} else {
+					startSlideshow(delayInMs);
+				}
+			}
+
+			function resetSlideshow() {
+				if (!slideshowIsOn) {
+					return;
+				}
+				
+				if (page + 1 == pages.length) {
+					stopSlideshow();
+					return;
+				}
+
+				if (slideshowInterval) {
+					clearInterval(slideshowInterval);
+					slideshowInterval = null;
+				}
+				$fullscreenProgressBar.stop().css({ width: "0%" }).animate({ width: "100%" }, slideshowMs, "linear");
+
+				slideshowInterval = setTimeout(function () {
+					if (!setPage(page + 1)) {
+						stopSlideshow();
+					}
+				}, slideshowMs);
+			}
+
+			function startSlideshow(delayInMs) {
+				if (page + 1 == pages.length) {
+					return;
+				}
+
+				slideshowMs = delayInMs;
+				slideshowIsOn = true;
+				resetSlideshow();
+			}
+
+			function stopSlideshow() {
+				if (slideshowInterval) {
+					clearInterval(slideshowInterval);
+					$fullscreenProgressBar.stop().css({ width: "0%" });
+					slideshowInterval = null;
+				}
+				slideshowMs = null;
+				slideshowIsOn = false;
+			}
+
+			function goFullScreen() {
+				$target[0].requestFullscreen();
+			}
+
+			$fullscreen.click(function (e) {
+				e.preventDefault();
+				goFullScreen();
+			});
+
+			function toaster(msg, timeout) {
+				timeout = timeout || 5000;
+				var $message = $('<div class="alert alert-primary" role="alert">').html(msg);
+				$message.appendTo($fullscreenToaster);
+				$message.fadeOut(timeout, "slowOut", function () {
+					$message.remove();
+				});
+			}
+		});
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	{{template "e_head.gohtml" .}}
+</head>
+
+<body>
+	{{template "e_header.gohtml" .}}
+	<div class="container">
+		<form class="mb-4" method="get">
+			<input type="hidden" name="page" value="0" />
+			<div class="card">
+				<div class="card-body p-2">
+					<div class="row">
+						<div class="col">
+							<input type="text" class="form-control" name="q" value="{{.Search}}" />
+						</div>
+						<div class="col">
+							<select class="form-control" id="orderSelect" name="order">
+								{{$order := .Order}}
+								{{range .OrderAvailable }}
+									<option value="{{.Key}}"{{if eq $order .Key }} selected {{end}}>{{.Value}}</option>
+								{{end}}
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="card-footer p-2 d-flex flex-row justify-content-between">
+					<div>
+						<button class="btn btn-primary mr-2" type="submit">Filter</button>
+						<!-- button class="btn btn-primary mr-2" title="Random" name="random" value="1" type="submit">
+							<i class="fa fa-dice"></i>
+						</button -->
+					</div>
+					
+					<fieldset id="displayTypes">
+						<div class="btn-group btn-group-toggle" data-toggle="buttons">
+							<label class="btn btn-primary">
+								<input type="radio" name="format" value="covers" {{if eq .Format "covers" }} checked {{end}}> Covers
+							</label>
+							<label class="btn btn-primary">
+								<input type="radio" name="format" value="table" {{if eq .Format "table" }} checked {{end}}> Table
+							</label>
+						</div>
+					</fieldset>
+				</div>
+			</div>
+		</form>
+
+		{{if .Things}}
+
+		<div class="d-flex justify-content-between">
+			{{template "pagination" .}}
+		</div>
+
+		{{if eq .Format "table"}}
+			<table class="table table-sm table-bordered table-striped mb-3">
+				<thead>
+					<tr>
+						<th>Title</th>
+						<th class="text-center">Collection</th>
+						<th class="text-center">Rating</th>
+						<th class="text-center">Pages</th>
+						<th class="text-center">Details</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{range .Things}}
+					{{
+						$title := print "Updated at: " (.UpdatedAt.Format "02/01/2006 15:04") "\nCreated at: " (.CreatedAt.Format "02/01/2006 15:04")
+					}}
+					<tr title="{{$title}}">
+						<td class="align-middle">
+							<a href="{{.ReadUrl}}" class="d-inline-block">{{.Title}}</a>
+							{{if ne .Marks 0}}
+								<span class="badge badge-pill badge-success">{{.Marks}}</span>
+							{{end}}
+						</td>
+						<td class="text-center text-nowrap">
+							{{if .Collection}}
+							<a class="btn btn-sm btn-primary" href="{{.CollectionDetailsUrl}}">{{.Collection}}</a>
+							{{end}}
+						</td>
+						<td class="text-center text-nowrap">
+							{{- noescape (.FilledStarsRepeat "<i class=\"fas fa-star text-gold\"></i>") -}}
+							{{- noescape (.EmptyStarsRepeat "<i class=\"far fa-star\"></i>") -}}
+						</td>
+						<td class="text-center">
+							{{.Pages}}
+						</td>
+						<td class="text-center">
+							<a href="{{.DetailsUrl}}" class="btn btn-sm btn-primary">Details</a>
+						</td>
+					</tr>
+					{{end}}
+				</tbody>
+			</table>
+		{{else}}
+		<div class="row">
+			{{range .Things}}
+			<div class="col-12 col-md-3 d-flex">
+				<div class="card mb-4 flex-column flex-fill">
+					<h2 class="card-header p-1 small text-center">
+						{{.Title}}
+						{{if ne .Marks 0}}
+							<span class="badge badge-pill badge-success">{{.Marks}}</span>
+						{{end}}
+					</h2>
+					<div class="card-body p-0 d-flex justify-content-center">
+						<a href="{{.ReadUrl}}" class="d-inline-block">
+							<img src="{{.ThumbUrl .CoverImageUrl}}" class="img-fluid" alt="Cover" />
+						</a>
+					</div>
+					<div class="card-footer p-1">
+						<div class="d-flex justify-content-between">
+							<div class="btn-group">
+								<a href="{{.DetailsUrl}}" class="btn btn-sm btn-primary">Details</a>
+							</div>
+							<div class="m-1">
+								{{- noescape (.FilledStarsRepeat "<i class=\"fas fa-star text-gold\"></i>") -}}
+								{{- noescape (.EmptyStarsRepeat "<i class=\"far fa-star\"></i>") -}}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			{{end}}
+		</div>
+		{{end}}
+		<div class="d-flex justify-content-center">
+			{{template "pagination" .}}
+		</div>
+		{{else}}
+		<div class="alert alert-danger" role="alert">
+			No results
+		</div>
+		{{end}}
+	</div>
+	{{template "e_footer.gohtml" .}}
+	<script>
+		$(document).ready(function() {
+			var locationFixed = new URLSearchParams(location.search);
+			locationFixed.delete('random')
+			localStorage.setItem("index.lastUrl", locationFixed.toString());
+			resetBrandButton();
+
+			var $displayTypes = $('#displayTypes');
+			$displayTypes.on('change', 'input', function(e) {
+				$displayTypes.closest('form').submit();
+			});
+
+			var $orderSelect = $('#orderSelect');
+			$orderSelect.on('change', function(e) {
+				$orderSelect.closest('form').submit();
+			});
+		});
+	</script>
+</body>
+
+</html>
+
+{{- define "pagination"}}
+<div class="btn-group mb-4">
+	{{if .HasPrev}}
+	<a href="{{.PagePrevUrl}}" class="btn btn-sm btn-primary">Previous</a>
+	{{else}}
+	<button disabled class="btn btn-sm btn-primary">Previous</button>
+	{{end}}
+	{{if .HasNext}}
+	<a href="{{.PageNextUrl}}" class="btn btn-sm btn-primary">Next</a>
+	{{else}}
+	<button disabled class="btn btn-sm btn-primary">Next</button>
+	{{end}}
+</div>
+{{end}}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	{{template "e_head.gohtml" .}}
+</head>
+
+<body class="thingDetails">
+	{{template "e_header.gohtml" .}}
+	<div class="container">
+		<div class="row">
+			<div class="col-md-3 col-12">
+				<div class="card mb-3 flex-column">
+					<div class="card-body p-0 text-center">
+						<a href="{{.Thing.ReadUrl}}" class="d-inline-block">
+							<img src="{{.Thing.ThumbUrl .Thing.CoverImageUrl}}" class="img-fluid" alt="Cover" />
+						</a>
+					</div>
+					<div class="card-footer d-flex justify-content-center" id="ratingTarget"></div>
+				</div>
+			</div>
+			<div class="col-md-9 col-12">
+				<h2 class="text-110">
+					{{.Thing.Title}}
+					{{if ne .Thing.Marks 0}}
+						<span class="badge badge-pill badge-success">{{.Thing.Marks}}</span>
+					{{end}}
+				</h2>
+				{{if .Thing.Collection}}
+				<p>
+					<a class="btn btn-sm btn-primary" href="{{.Thing.CollectionDetailsUrl}}">{{.Thing.Collection}}</a>
+				</p>
+				{{end}}
+
+				{{if .Thing.Description}}
+					<div class="card mb-3">
+						<div class="card-body">
+							{{.Thing.Description}}
+						</div>
+					</div>
+				{{end}}
+				
+				{{if .Thing.Tags -}}
+				<table class="table table-sm table-bordered table-striped mb-3">
+					
+					{{ range $typeName, $type := .Thing.SortedTags }}
+					<tr>
+						<td class="text-right">
+							{{$typeName}}
+						</td>
+						<td>
+							{{ range $type }}
+							
+							<a class="badge badge-primary" href="{{.Url}}">{{.Label}}</a>
+							
+							{{ end }}
+						</td>
+					</tr>
+					{{end}}
+				</table>
+				{{- end}}
+			</div>
+		</div>
+		<div class="row">
+			{{ $thing := .Thing }}
+			{{range $key, $val := .FilesRaw}}
+			<div class="col-2 d-flex">
+				<div class="card mb-4 flex-column flex-fill">
+					<div class="card-body p-0 d-flex justify-content-center">
+						<a href="{{$thing.ReadFileUrl $key}}" class="d-inline-block">
+							<img src="{{$thing.ThumbUrl $val}}" class="img-fluid" alt="Cover" />
+						</a>
+					</div>
+				</div>
+			</div>
+			{{end}}
+		</div>
+	</div>
+	
+	{{template "e_footer.gohtml" .}}
+	<script>
+		var hash = {{ .Thing.Hash }};
+		
+		var $ratingTarget = $('#ratingTarget');
+
+		$(document).ready(function () {
+			$.getJSON('/thing/' + hash + '/rating.json')
+				.done(function (data) {
+					$ratingTarget.appendRatingForm(hash, data.Rating).then(function (data) {
+						rating = data;
+					});
+				})
+				.fail(function () {
+					$ratingTarget.html('Error');
+				});
+		})
+	</script>
+</body>
+
+</html>

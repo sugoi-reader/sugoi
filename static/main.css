@@ -1,0 +1,81 @@
+.text-gold{
+    color: rgb(218, 166, 35);
+}
+
+.text-red{
+    color: #c00;
+}
+
+.text-100 {
+    font-size: 100%;
+}
+
+.text-110 {
+    font-size: 110%;
+}
+
+main {
+    margin-top: 70px;
+}
+
+body.thingRead #target {
+    padding-top: 3px;
+}
+
+body.thingRead #target img {
+    cursor: pointer;
+}
+
+body.thingRead #fullscreenToaster {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    text-align: right;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+body.thingRead #fullscreenProgress {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+body.thingRead #target #fullscreenPageCounter {
+    display: none;
+}
+
+body.thingRead #target:fullscreen #fullscreenPageCounter {
+    display: block;
+    text-shadow: 0 0 3px black;
+    position: absolute;
+    top: 3px;
+    right: 48px;
+    left: 3px;
+    text-align: right;
+    font-size: 12px;
+}
+
+body.thingRead #fullscreenProgress .progress.green {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: #7a9;
+}
+
+button.rateButton {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
+
+button.rateButton.active {
+color: rgb(218, 166, 35);
+}

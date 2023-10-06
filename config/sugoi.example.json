@@ -1,0 +1,17 @@
+{
+    "Debug": true,
+    "CacheThumbnails": true,
+    "CacheDir": "./cache/",
+    "DatabaseDir": "./db/",
+    "ServerHost": "0.0.0.0",
+    "ServerPort": 80,
+    "SessionCookieName": "sugoi",
+    "SessionCookieMaxAge": 3600,
+    "SessionCookieKey": "CHANGEMEZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ==",
+    "DirVars": {
+        "DOLPHIN": "/path/to/dolphin/"
+    },
+    "Users": {
+        "user": "$2a$14$HhkeZP5kcCecR9xJGMa6T.5a5mAdYcSwg4ab2aMe63hgUpZiAFBkK"
+    }
+}
