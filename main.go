@@ -38,7 +38,7 @@ func main() {
 	var err error
 
 	flag.StringVar(&configPath, "c", "./config/sugoi.json", "Path to the configuration file. Default: ./config/sugoi.json")
-	user := flag.Bool("u", false, "Adds a new user to config.json or changes de password of an existing user.")
+	user := flag.Bool("u", false, "Adds a new user or changes de password of an existing user on your config file.")
 	flag.Parse()
 
 	InitializeBuildTime()
