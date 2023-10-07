@@ -885,7 +885,7 @@ func ManageUsers() {
 	var overwrite bool
 	for {
 		var decision string
-		fmt.Printf("Overwrite %s with this? [Y/n]", configPath)
+		fmt.Printf("Overwrite %s with this? [Y/n] ", configPath)
 		fmt.Scanln(&decision)
 
 		decision = strings.ToLower(decision)
