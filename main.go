@@ -841,13 +841,12 @@ func main() {
 }
 
 func ManageUsers() {
-	fmt.Print("Warning: this will overwrite and reorder your config file and remove and unknown keys\n\n")
-
 	var username string
 	fmt.Print("Username: ")
 	fmt.Scanln(&username)
 	fmt.Print("Password: ")
 	password, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Print("**************")
 	fmt.Println()
 
 	if err != nil {
@@ -874,64 +873,46 @@ func ManageUsers() {
 
 	config.Users[username] = hashedPassword
 
-	config.Save(configPath)
-
+	newFile, err := config.Export()
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(9)
+		os.Exit(10)
 	}
 
-	if exists {
-		fmt.Printf("Password for user %s changed and saved\n", username)
-	} else {
-		fmt.Printf("User %s created and saved\n", username)
-	}
-}
+	fmt.Println("Updated config file:")
+	fmt.Println(newFile)
 
-func newFunction() {
-	fmt.Print("Warning: this will overwrite and reorder your config file and remove and unknown keys\n\n")
+	var overwrite bool
+	for {
+		var decision string
+		fmt.Printf("Overwrite %s with this? [Y/n]", configPath)
+		fmt.Scanln(&decision)
 
-	var username string
-	fmt.Print("Username: ")
-	fmt.Scanln(&username)
-	fmt.Print("Password: ")
-	password, err := terminal.ReadPassword(int(syscall.Stdin))
-	fmt.Println()
+		decision = strings.ToLower(decision)
 
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(4)
-	}
+		if decision == "y" || decision == "yes" {
+			overwrite = true
+			break
+		}
 
-	if len(password) < 6 {
-		fmt.Println("Password should have at least 6 characters")
-		os.Exit(3)
+		if decision == "n" || decision == "no" {
+			overwrite = false
+			break
+		}
 	}
 
-	hashedPassword, err := HashPassword(string(password))
+	if overwrite {
+		config.Save(configPath)
 
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(7)
-	}
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(9)
+		}
 
-	if config.Users == nil {
-		config.Users = make(map[string]string)
-	}
-	_, exists := config.Users[username]
-
-	config.Users[username] = hashedPassword
-
-	config.Save(configPath)
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(9)
-	}
-
-	if exists {
-		fmt.Printf("Password for user %s changed and saved\n", username)
-	} else {
-		fmt.Printf("User %s created and saved\n", username)
+		if exists {
+			fmt.Printf("Password for user %s changed and saved\n", username)
+		} else {
+			fmt.Printf("User %s created and saved\n", username)
+		}
 	}
 }

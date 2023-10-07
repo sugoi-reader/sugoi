@@ -53,6 +53,16 @@ func (c SugoiConfig) Save(to string) error {
 	return err
 }
 
+func (c SugoiConfig) Export() (string, error) {
+	b, err := json.MarshalIndent(c, "", "\t")
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
+}
+
 func InitializeConfig() error {
 	var err error
 	configFile, err := os.Open(configPath)
