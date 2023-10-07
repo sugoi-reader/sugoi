@@ -890,7 +890,7 @@ func ManageUsers() {
 
 		decision = strings.ToLower(decision)
 
-		if decision == "y" || decision == "yes" {
+		if decision == "" || decision == "y" || decision == "yes" {
 			overwrite = true
 			break
 		}
