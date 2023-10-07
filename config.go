@@ -24,7 +24,6 @@ type SugoiConfig struct {
 	SessionCookieMaxAge int
 	SessionCookieKey    []byte
 	Users               map[string]string
-	MaxUploadSize       int64
 	// DefaultCoverFileName string
 }
 
@@ -32,6 +31,26 @@ func (c SugoiConfig) CacheFile(elem ...string) string {
 	params := []string{c.CacheDir}
 	params = append(params, elem...)
 	return path.Join(params...)
+}
+
+func (c SugoiConfig) Save(to string) error {
+	var err error
+	configFile, err := os.OpenFile(to, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+
+	if err != nil {
+		return err
+	}
+	defer configFile.Close()
+
+	b, err := json.MarshalIndent(c, "", "\t")
+
+	if err != nil {
+		return err
+	}
+
+	_, err = configFile.Write(b)
+
+	return err
 }
 
 func InitializeConfig() error {
@@ -50,10 +69,6 @@ func InitializeConfig() error {
 	err = json.Unmarshal(configBytes, &config)
 	if err != nil {
 		return err
-	}
-
-	if config.MaxUploadSize <= 0 {
-		config.MaxUploadSize = 64 * 1024 * 1024 // default 64MB
 	}
 
 	// if config.DefaultCoverFileName == "" {

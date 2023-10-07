@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/bamiaux/rez"
 	"github.com/blevesearch/bleve/v2"
@@ -25,11 +26,11 @@ import (
 	"image/jpeg"
 	_ "image/png"
 
+	"golang.org/x/crypto/ssh/terminal"
 	_ "golang.org/x/image/webp"
 )
 
 var configPath string
-var hashPassword string
 var filePointers FilePointerList
 var bleveIndex bleve.Index
 
@@ -37,31 +38,19 @@ func main() {
 	var err error
 
 	flag.StringVar(&configPath, "c", "./config/sugoi.json", "Path to the configuration file. Default: ./config/sugoi.json")
-	flag.StringVar(&hashPassword, "h", "", "Show the hash of a password to add to the config file.")
+	user := flag.Bool("u", false, "Adds a new user to config.json or changes de password of an existing user.")
 	flag.Parse()
-
-	if len(hashPassword) != 0 {
-		if len(hashPassword) < 6 {
-			fmt.Println("Password should have at least 6 characters")
-			os.Exit(3)
-		}
-
-		pw, err := HashPassword(hashPassword)
-
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(7)
-		}
-
-		fmt.Printf("\t\"USERNAME\": \"%s\",\n", pw)
-		return
-	}
 
 	InitializeBuildTime()
 	err = InitializeConfig()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+
+	if user != nil && *user {
+		ManageUsers()
+		return
 	}
 
 	InitializeSession()
@@ -842,10 +831,107 @@ func main() {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	fmt.Println("uwu")
+	fmt.Printf("Listening on http://%s:%d\n", config.ServerHost, config.ServerPort)
 	err = http.ListenAndServe(fmt.Sprintf("%s:%d", config.ServerHost, config.ServerPort), r)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(4)
 	}
 	fmt.Println("owo")
+}
+
+func ManageUsers() {
+	fmt.Print("Warning: this will overwrite and reorder your config file and remove and unknown keys\n\n")
+
+	var username string
+	fmt.Print("Username: ")
+	fmt.Scanln(&username)
+	fmt.Print("Password: ")
+	password, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Println()
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(4)
+	}
+
+	if len(password) < 6 {
+		fmt.Println("Password should have at least 6 characters")
+		os.Exit(3)
+	}
+
+	hashedPassword, err := HashPassword(string(password))
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(7)
+	}
+
+	if config.Users == nil {
+		config.Users = make(map[string]string)
+	}
+	_, exists := config.Users[username]
+
+	config.Users[username] = hashedPassword
+
+	config.Save(configPath)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(9)
+	}
+
+	if exists {
+		fmt.Printf("Password for user %s changed and saved\n", username)
+	} else {
+		fmt.Printf("User %s created and saved\n", username)
+	}
+}
+
+func newFunction() {
+	fmt.Print("Warning: this will overwrite and reorder your config file and remove and unknown keys\n\n")
+
+	var username string
+	fmt.Print("Username: ")
+	fmt.Scanln(&username)
+	fmt.Print("Password: ")
+	password, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Println()
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(4)
+	}
+
+	if len(password) < 6 {
+		fmt.Println("Password should have at least 6 characters")
+		os.Exit(3)
+	}
+
+	hashedPassword, err := HashPassword(string(password))
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(7)
+	}
+
+	if config.Users == nil {
+		config.Users = make(map[string]string)
+	}
+	_, exists := config.Users[username]
+
+	config.Users[username] = hashedPassword
+
+	config.Save(configPath)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(9)
+	}
+
+	if exists {
+		fmt.Printf("Password for user %s changed and saved\n", username)
+	} else {
+		fmt.Printf("User %s created and saved\n", username)
+	}
 }
